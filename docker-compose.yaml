@@ -1,0 +1,54 @@
+version: "3"
+services:
+  tugas_akhir:
+    build: ./tugas_akhir/php
+    image: laravel_tugas_akhir:latest
+    container_name: tugas_akhir
+    hostname: "tugas_akhir"
+    volumes:
+      - ./tugas_akhir/src:/var/www/html
+      - ./tugas_akhir/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    working_dir: /var/www/html
+    depends_on:
+      - db_tugas_akhir
+    networks:
+      - tugas_akhir_network
+
+  db_tugas_akhir:
+    image: mariadb:10.2
+    container_name: db_tugas_akhir
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "14306:3306"
+    volumes:
+      - ./tugas_akhir/database/data:/var/lib/mysql
+      - ./tugas_akhir/php/conf.d:/etc/mysql/conf.d:ro
+    environment:
+      MYSQL_DATABASE: tugas_akhir_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: WebSalon123
+      MYSQL_ROOT_PASSWORD: WebSalon12345
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - tugas_akhir_network
+
+  nginx_tugas_akhir:
+    build: ./tugas_akhir/nginx
+    image: nginx_tugas_akhir:latest
+    container_name: nginx_tugas_akhir
+    hostname: "nginx_tugas_akhir"
+    ports:
+      - "8080:80"
+    volumes:
+      - ./tugas_akhir/src:/var/www/html
+      - ./tugas_akhir/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - tugas_akhir
+    networks:
+      - tugas_akhir_network
+
+networks:
+  tugas_akhir_network:
+    driver: bridge
